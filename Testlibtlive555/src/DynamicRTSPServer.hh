@@ -30,11 +30,12 @@ class DynamicRTSPServer: public RTSPServer {
 public:
   static DynamicRTSPServer* createNew(UsageEnvironment& env, Port ourPort,
 				      UserAuthenticationDatabase* authDatabase,
-				      unsigned reclamationTestSeconds = 65);
+                      const char *mediaPath,
+				      unsigned reclamationTestSeconds = 65  );
 
 protected:
   DynamicRTSPServer(UsageEnvironment& env, int ourSocketIPv4, int ourSocketIPv6, Port ourPort,
-		    UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds);
+		    UserAuthenticationDatabase* authDatabase,const char *mediaPath, unsigned reclamationTestSeconds);
   // called only by createNew();
   virtual ~DynamicRTSPServer();
 
@@ -43,6 +44,9 @@ protected: // redefined virtual functions
 					lookupServerMediaSessionCompletionFunc* completionFunc,
 					void* completionClientData,
 					Boolean isFirstLookupInSession);
+    
+private:
+    const char* tootMedaiFolderPath ;
 };
 
 #endif

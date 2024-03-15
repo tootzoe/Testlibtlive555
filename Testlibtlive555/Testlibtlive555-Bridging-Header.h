@@ -4,11 +4,11 @@
 
 
 
-
-
+ 
+void stopLive555Server(void);
 int startMediaSrv(const char *mediaFolderPath);
 
-
+ 
 
 
 

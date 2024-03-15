@@ -23,6 +23,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "version.hh"
 //#include <GroupsockHelper.hh> // for "weHaveAnIPv*Address()"
 
+volatile char isExit = 0;
+
+extern "C"
+void stopLive555Server(void){
+    isExit = 1;
+}
+
 extern "C"
 int startMediaSrv(const char *mediaFolderPath) {
   // Begin by setting up our usage environment:
@@ -42,14 +49,14 @@ int startMediaSrv(const char *mediaFolderPath) {
   // and then with the alternative port number (8554):
   RTSPServer* rtspServer;
   portNumBits rtspServerPortNum = 554;
-  rtspServer = DynamicRTSPServer::createNew(*env, rtspServerPortNum, authDB);
+  rtspServer = DynamicRTSPServer::createNew(*env, rtspServerPortNum, authDB , mediaFolderPath);
   if (rtspServer == NULL) {
     rtspServerPortNum = 8554;
-    rtspServer = DynamicRTSPServer::createNew(*env, rtspServerPortNum, authDB);
+    rtspServer = DynamicRTSPServer::createNew(*env, rtspServerPortNum, authDB , mediaFolderPath);
   }
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
-    exit(1);
+      return  1;
   }
 
   *env << "LIVE555 Media Server\n";
@@ -100,7 +107,9 @@ int startMediaSrv(const char *mediaFolderPath) {
     *env << "(RTSP-over-HTTP tunneling is not available.)\n";
   }
 
-  env->taskScheduler().doEventLoop(); // does not return
+  env->taskScheduler().doEventLoop(&isExit); // does not return
 
+   
+    *env << "Live555 media server exit......\n";
   return 0; // only to prevent compiler warning
 }

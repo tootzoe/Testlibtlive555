@@ -22,23 +22,26 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 //#include <liveMedia.hh>
 #include "libtlive555/liveMedia.hh"
 #include <string.h>
+#include <stdio.h>
 
 DynamicRTSPServer*
 DynamicRTSPServer::createNew(UsageEnvironment& env, Port ourPort,
 			     UserAuthenticationDatabase* authDatabase,
-			     unsigned reclamationTestSeconds) {
+                             const char *mediaPath,
+			     unsigned reclamationTestSeconds  ) //
+{
   int ourSocketIPv4 = setUpOurSocket(env, ourPort, AF_INET);
   int ourSocketIPv6 = setUpOurSocket(env, ourPort, AF_INET6);
   if (ourSocketIPv4 < 0 && ourSocketIPv6 < 0) return NULL;
 
   return new DynamicRTSPServer(env, ourSocketIPv4, ourSocketIPv6, ourPort,
-			       authDatabase, reclamationTestSeconds);
+			       authDatabase, mediaPath, reclamationTestSeconds  );
 }
 
 DynamicRTSPServer::DynamicRTSPServer(UsageEnvironment& env, int ourSocketIPv4, int ourSocketIPv6,
 				     Port ourPort,
-				     UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds)
-  : RTSPServer(env, ourSocketIPv4, ourSocketIPv6, ourPort, authDatabase, reclamationTestSeconds) {
+				     UserAuthenticationDatabase* authDatabase, const char *mediaPath, unsigned reclamationTestSeconds )
+  : RTSPServer(env, ourSocketIPv4, ourSocketIPv6, ourPort, authDatabase, reclamationTestSeconds) ,tootMedaiFolderPath(mediaPath)  {
 }
 
 DynamicRTSPServer::~DynamicRTSPServer() {
@@ -48,10 +51,18 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
 					char const* fileName, FILE* fid); // forward
 
 void DynamicRTSPServer
-::lookupServerMediaSession(char const* streamName,
+::lookupServerMediaSession(char const* streamName0,
 			   lookupServerMediaSessionCompletionFunc* completionFunc,
 			   void* completionClientData,
 			   Boolean isFirstLookupInSession) {
+     
+    char streamName[255] = {0};
+    
+    if( strstr(streamName0 , tootMedaiFolderPath) == streamName0) {
+        snprintf(streamName, sizeof(streamName) , "%s",  streamName0);
+    }else
+       snprintf(streamName, sizeof(streamName) , "%s%s", tootMedaiFolderPath , streamName0);
+    
   // First, check whether the specified "streamName" exists as a local file:
   FILE* fid = fopen(streamName, "rb");
   Boolean const fileExists = fid != NULL;

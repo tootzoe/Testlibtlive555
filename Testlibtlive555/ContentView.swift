@@ -14,23 +14,60 @@
 import SwiftUI
  
 struct ContentView: View {
+    
+    @State private var mediaFolderPath = ""
+    
+    @State private var testStr = ""
+    
+    @State private var currLDat = Data()
+    
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
             
+            Text("mediaFolder: \(mediaFolderPath)")
+        
+            Button("Select MediaFolder"){
+                #if os(macOS)
+                 let op = NSOpenPanel()
+                op.directoryURL = URL.documentsDirectory
+                
+                op.canChooseDirectories = true
+                op.canChooseFiles = false
+                op.title = "Select a folder contains medial files...."
+                op.begin { rsl in
+                    if rsl.rawValue == NSApplication.ModalResponse.OK.rawValue {
+                        mediaFolderPath = op.url?.path() ?? mediaFolderPath
+                    }
+                }
+                #else
+                mediaFolderPath = URL.documentsDirectory.path()
+                print(mediaFolderPath)
+                let b = FileManager.default.isReadableFile(atPath: "\(mediaFolderPath)xs.mp3")
+                print(b)
+                #endif
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
             
             Divider()
             
             
             Button("Start Media Server"){
-                startLive555Svr("")
+                startLive555Svr(mediaFolderPath)
             }
             .buttonStyle(.borderedProminent)
             
+            Divider()  
+            Button("Stop Media Server"){
+                stopLive555Server()
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.red)
+            
             Divider()
+            
+            
+            
             
               Button("Write txt to document"){
                   var p = URL.documentsDirectory
@@ -54,10 +91,11 @@ struct ContentView: View {
                   DispatchQueue.global().async {
                       getData()
                   }
-                  
-                 
             }
             .buttonStyle(.borderedProminent)
+            
+        Divider()
+            
             
         }
         .padding()
@@ -69,12 +107,12 @@ struct ContentView: View {
     private func startLive555Svr(_ folderPath :String) {
         
         print("applicationDirectory0: " ,URL.currentDirectory())
-        
+        #if os(iOS)
         FileManager.default.changeCurrentDirectoryPath(URL.documentsDirectory.path())
         
         print("applicationDirectory1: " ,URL.currentDirectory())
         print("applicationDirectory2: " ,FileManager.default.currentDirectoryPath)
-        
+        #endif
         
         DispatchQueue.global().async {
             startMediaSrv(folderPath)
@@ -144,7 +182,17 @@ extension getLocalNetworkAccessState : NetServiceDelegate {
 }
 
 
+public extension String {
+    var hexStr : String {
+        Data(self.utf8).hexDescription
+    }
+}
 
+public extension Data {
+    var hexDescription: String {
+        return reduce("") {$0 + String(format: "%02x", $1)}
+    }
+}
 
 #Preview {
     ContentView()
